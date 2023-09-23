@@ -27,7 +27,7 @@ function ShoppingCardProduct({ item }: Props) {
   const removeHandler = useCallback(() => {
     setValue(value.filter((p) => p._id !== _id));
     toast.success(`"${item.name}" deleted from Your cart`);
-  }, [_id, setValue, value]);
+  }, [_id, item.name, setValue, value]);
 
   return (
     <section className='relative flex gap-4 items-center p-2 text-xs bg-gray-100 rounded-md'>

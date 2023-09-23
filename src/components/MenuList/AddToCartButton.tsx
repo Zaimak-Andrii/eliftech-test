@@ -18,7 +18,7 @@ function AddToCartButton({ children, item, ...props }: Props) {
     if (oldItem) {
       setValue(value.map((i) => (i._id === item._id ? { ...i, count: i.count + 1 } : i)));
     } else {
-      setValue((prev) => [...prev, { ...item, count: 1 }]);
+      setValue([...value, { ...item, count: 1 }]);
     }
 
     toast.success(`"${item.name}" added to Your cart.`);
