@@ -1,0 +1,99 @@
+'use client';
+
+import { InputHTMLAttributes, useCallback } from 'react';
+import { FieldValues, useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
+import { useShoppingCart } from '@/hooks';
+import ShoppingCardProduct from './ShoppingCardProduct';
+import FormInput from './FormInput';
+import { convertNumberToMoney } from '@/helpers';
+import ProductsList from './ProductsList';
+import { toast } from 'react-toastify';
+
+const schema = yup
+  .object({
+    name: yup.string().required(),
+    email: yup.string().email().required(),
+    phone: yup.number().positive().required(),
+    address: yup.string().min(3).max(30).required(),
+  })
+  .required();
+
+type FormData = yup.InferType<typeof schema>;
+
+const fields: { name: keyof FormData; label: string; placeholder: string; type: HTMLInputElement['type'] }[] = [
+  { name: 'name', label: 'Name:', placeholder: 'Enter name', type: 'text' },
+  { name: 'email', label: 'Email:', placeholder: 'Enter email', type: 'email' },
+  { name: 'phone', label: 'Phone:', placeholder: 'Enter phone', type: 'tel' },
+  { name: 'address', label: 'Address:', placeholder: 'Enter address', type: 'text' },
+];
+
+function ShoppingCartForm() {
+  const { value: shoppintCart, setValue: setShoppingCart } = useShoppingCart();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting, isValid },
+    reset,
+  } = useForm<FormData>({
+    resolver: yupResolver(schema),
+    mode: 'onTouched',
+  });
+  const totalPrice = shoppintCart.reduce((acc, p) => acc + p.count * p.price, 0);
+  const isCanSubmit = isValid && shoppintCart.length > 0;
+
+  const submitHandler = useCallback(
+    async (data: FormData) => {
+      const result = await fetch('http://localhost:3000/api/orders', {
+        cache: 'no-cache',
+        method: 'POST',
+        body: JSON.stringify({
+          ...data,
+          products: shoppintCart.map((p) => ({ product: p._id, count: p.count })),
+          coupon: null,
+        }),
+      });
+
+      const responseData = await result.json();
+
+      if (responseData.status === 'failed') {
+        return toast.error(responseData.message);
+      }
+
+      reset();
+      setShoppingCart([]);
+      toast.success('Your order accepted success.');
+    },
+    [reset, setShoppingCart, shoppintCart]
+  );
+
+  return (
+    <form className='flex gap-4 flex-col w-full overflow-y-auto' onSubmit={handleSubmit(submitHandler)}>
+      <div className='flex flex-grow gap-4'>
+        <div className='flex flex-col gap-4 w-[40%] flex-shrink-0 p-2 bg-blue-100 rounded-lg'>
+          {fields.map((f) => (
+            <FormInput key={f.name} {...f} register={register} error={errors[f.name]?.message} />
+          ))}
+        </div>
+
+        <div className='w-full p-4 bg-blue-100 rounded-lg overflow-y-auto'>
+          <ProductsList list={shoppintCart} />
+        </div>
+      </div>
+
+      <div className='flex items-center justify-end gap-6 p-2 bg-blue-100 rounded-lg'>
+        <p>Total price: {convertNumberToMoney(totalPrice)}</p>
+        <button
+          className='px-4 py-2 bg-yellow-500 text-black rounded-md disabled:opacity-30'
+          type='submit'
+          disabled={!isCanSubmit || isSubmitting}
+        >
+          {isSubmitting ? 'Loading...' : 'Submit'}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+export default ShoppingCartForm;
