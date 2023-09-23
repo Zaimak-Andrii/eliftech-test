@@ -20,7 +20,17 @@ export async function POST(request: NextRequest) {
     await connectMongoDB();
     const order = await Order.create({ name, email, phone, address, products, coupon: coupon });
 
-    return NextResponse.json({ status: 'success', data: { order } }, { status: 201 });
+    const res = NextResponse.json({ status: 'success', data: { order } }, { status: 201 });
+
+    res.headers.set('Access-Control-Allow-Credentials', 'true');
+    res.headers.set('Access-Control-Allow-Origin', '*');
+    res.headers.set('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+    res.headers.set(
+      'Access-Control-Allow-Headers',
+      'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+    );
+
+    return res;
   } catch (err) {
     console.log((err as Error).message);
     return NextResponse.json({ status: 'failed', message: (err as Error).message }, { status: 400 });
