@@ -18,7 +18,7 @@ const nextConfig = {
           { key: 'Access-Control-Allow-Credentials', value: 'false' },
           {
             key: 'Access-Control-Allow-Origin',
-            value: '*',
+            value: 'https://eliftech-test.vercel.app',
           },
           {
             key: 'Access-Control-Allow-Methods',
