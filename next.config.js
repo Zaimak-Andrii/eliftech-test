@@ -10,6 +10,15 @@ const nextConfig = {
       },
     ],
   },
+
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'https://eliftech-test-7b91po5g9-zaimak-andrii.vercel.app/:path*',
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
