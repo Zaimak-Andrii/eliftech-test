@@ -1,3 +1,4 @@
+'use client';
 import type { CartProductType } from '@/types';
 import { useLocalStorage } from '@uidotdev/usehooks';
 
