@@ -1,5 +1,5 @@
 import MenuList from '@/components/MenuList';
-import type { MenuType, ShopType } from '@/types';
+import { getShopInfoByIdService, getShopMenuService } from '@/services/api';
 
 type Props = {
   params: {
@@ -7,27 +7,18 @@ type Props = {
   };
 };
 
-const fetchShopInfo = async (shopId: string): Promise<ShopType> => {
-  const result = await fetch(`http://localhost:3000/api/shops/${shopId}`);
-  const data = await result.json();
-
-  return data.shop;
-};
-
-const fetchShopMenu = async (shopId: string): Promise<MenuType[]> => {
-  const result = await fetch(`http://localhost:3000/api/shops/${shopId}/menu`);
-  const data = await result.json();
-
-  return data.menu;
-};
-
 export default async function ShopMenu({ params: { shopId } }: Props) {
-  const [shop, menu] = await Promise.all([fetchShopInfo(shopId), fetchShopMenu(shopId)]);
+  const [shopInfoResponse, menuResponse] = await Promise.all([
+    getShopInfoByIdService(shopId),
+    getShopMenuService(shopId),
+  ]);
 
   return (
     <section className=' flex flex-col w-full p-4 bg-blue-50 rounded-lg'>
-      <h1 className='mb-4 text-center text-xl font-bold'>{shop.name} menu:</h1>
-      <MenuList list={menu} />
+      {shopInfoResponse.status === 'success' && (
+        <h1 className='mb-4 text-center text-xl font-bold'>{shopInfoResponse.data.shop.name} menu:</h1>
+      )}
+      {menuResponse.status === 'success' && <MenuList list={menuResponse.data.menu} />}
     </section>
   );
 }

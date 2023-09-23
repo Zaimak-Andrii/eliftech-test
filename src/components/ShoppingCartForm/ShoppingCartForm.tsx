@@ -10,6 +10,7 @@ import FormInput from './FormInput';
 import { convertNumberToMoney } from '@/helpers';
 import ProductsList from './ProductsList';
 import { toast } from 'react-toastify';
+import { addOrderService } from '@/services/api';
 
 const schema = yup
   .object({
@@ -45,20 +46,14 @@ function ShoppingCartForm() {
 
   const submitHandler = useCallback(
     async (data: FormData) => {
-      const result = await fetch('http://localhost:3000/api/orders', {
-        cache: 'no-cache',
-        method: 'POST',
-        body: JSON.stringify({
-          ...data,
-          products: shoppintCart.map((p) => ({ product: p._id, count: p.count })),
-          coupon: null,
-        }),
+      const result = await addOrderService({
+        ...data,
+        products: shoppintCart.map((p) => ({ product: p._id, count: p.count })),
+        coupon: null,
       });
 
-      const responseData = await result.json();
-
-      if (responseData.status === 'failed') {
-        return toast.error(responseData.message);
+      if (result.status === 'failed') {
+        return toast.error(result.message);
       }
 
       reset();

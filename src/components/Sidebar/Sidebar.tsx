@@ -1,11 +1,11 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import type { ShopType } from '@/types';
 import SidebarLink from './SidebarLink';
 import { Route } from '@/constants';
 import { useShoppingCart } from '@/hooks';
-import { useEffect } from 'react';
 
 type Props = {
   shops: ShopType[];
