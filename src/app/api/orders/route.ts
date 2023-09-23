@@ -2,6 +2,11 @@ import connectMongoDB from '@/libs/mongobd';
 import Order from '@/models/Order';
 
 import { NextRequest, NextResponse } from 'next/server';
+export const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
 
 export async function GET() {
   try {
@@ -21,7 +26,7 @@ export async function POST(request: NextRequest) {
     await connectMongoDB();
     const order = await Order.create({ name, email, phone, address, products, coupon: coupon });
 
-    return NextResponse.json({ status: 'success', data: { order } }, { status: 201 });
+    return NextResponse.json({ status: 'success', data: { order } }, { status: 201, headers: corsHeaders });
   } catch (err) {
     console.log((err as Error).message);
     return NextResponse.json({ status: 'failed', message: (err as Error).message }, { status: 400 });

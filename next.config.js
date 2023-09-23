@@ -10,15 +10,6 @@ const nextConfig = {
       },
     ],
   },
-
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: 'https://eliftech-test.vercel.app/:path*',
-      },
-    ];
-  },
 };
 
 module.exports = nextConfig;
