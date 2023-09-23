@@ -42,6 +42,9 @@ export const addOrderService = async (body: OrderType) => {
     async () =>
       await fetch(`${baseUrl}/orders`, {
         cache: 'no-cache',
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+        },
         method: 'POST',
         body: JSON.stringify(body),
       })
