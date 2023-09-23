@@ -15,7 +15,7 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'https://eliftech-test-7b91po5g9-zaimak-andrii.vercel.app/:path*',
+        destination: 'https://eliftech-test.vercel.app/:path*',
       },
     ];
   },
