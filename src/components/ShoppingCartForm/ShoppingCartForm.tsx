@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import ReCAPTCHA from 'react-google-recaptcha';
 import * as yup from 'yup';
@@ -11,13 +11,14 @@ import { convertNumberToMoney } from '@/helpers';
 import ProductsList from './ProductsList';
 import { toast } from 'react-toastify';
 import { addOrderService } from '@/services/api';
+import ReactGoogleAutocomplete from 'react-google-autocomplete';
 
 const schema = yup
   .object({
     name: yup.string().required(),
     email: yup.string().email().required(),
     phone: yup.number().positive().required(),
-    address: yup.string().min(3).max(30).required(),
+    address: yup.string().min(3).max(60).required(),
   })
   .required();
 
@@ -27,16 +28,18 @@ const fields: { name: keyof FormData; label: string; placeholder: string; type: 
   { name: 'name', label: 'Name:', placeholder: 'Enter name', type: 'text' },
   { name: 'email', label: 'Email:', placeholder: 'Enter email', type: 'email' },
   { name: 'phone', label: 'Phone:', placeholder: 'Enter phone', type: 'tel' },
-  { name: 'address', label: 'Address:', placeholder: 'Enter address', type: 'text' },
+  // { name: 'address', label: 'Address:', placeholder: 'Enter address', type: 'text' },
 ];
 
 function ShoppingCartForm() {
   const { value: shoppintCart, setValue: setShoppingCart } = useShoppingCart();
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isSubmitting, isValid },
     reset,
+    setValue,
   } = useForm<FormData>({
     resolver: yupResolver(schema),
     mode: 'onTouched',
@@ -78,6 +81,31 @@ function ShoppingCartForm() {
           {fields.map((f) => (
             <FormInput key={f.name} {...f} register={register} error={errors[f.name]?.message} />
           ))}
+
+          <Controller
+            name='address'
+            control={control}
+            render={({ field: { onChange, value, ...field } }) => (
+              <label className='flex flex-col gap-2'>
+                <span>Address:</span>
+                <ReactGoogleAutocomplete
+                  className='p-1 text-sm'
+                  apiKey={process.env.NEXT_PUBLIC_GOOGLE_KEY}
+                  onPlaceSelected={(place) => {
+                    setValue('address', place.formatted_address);
+                  }}
+                  options={{
+                    componentRestrictions: { country: 'ua' },
+                    fields: ['address_components', 'geometry', 'icon', 'name', 'formatted_address'],
+                    types: ['address'],
+                  }}
+                  placeholder='Enter Your address'
+                  {...field}
+                />
+              </label>
+            )}
+          />
+
           <ReCAPTCHA
             size='normal'
             ref={captchaRef}
