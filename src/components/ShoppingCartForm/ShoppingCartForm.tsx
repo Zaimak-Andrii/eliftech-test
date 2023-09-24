@@ -1,11 +1,11 @@
 'use client';
 
-import { InputHTMLAttributes, useCallback } from 'react';
-import { FieldValues, useForm } from 'react-hook-form';
+import { useCallback, useRef, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
+import ReCAPTCHA from 'react-google-recaptcha';
 import * as yup from 'yup';
 import { useShoppingCart } from '@/hooks';
-import ShoppingCardProduct from './ShoppingCardProduct';
 import FormInput from './FormInput';
 import { convertNumberToMoney } from '@/helpers';
 import ProductsList from './ProductsList';
@@ -41,8 +41,14 @@ function ShoppingCartForm() {
     resolver: yupResolver(schema),
     mode: 'onTouched',
   });
+  const captchaRef = useRef<ReCAPTCHA | null>(null);
+  const [isCaptchaSuccess, setIsCaptchaSuccess] = useState(false);
   const totalPrice = shoppintCart.reduce((acc, p) => acc + p.count * p.price, 0);
-  const isCanSubmit = isValid && shoppintCart.length > 0;
+  const isCanSubmit = isValid && isCaptchaSuccess && shoppintCart.length > 0;
+
+  const changeCaptchaHandler = useCallback(() => {
+    setIsCaptchaSuccess(true);
+  }, []);
 
   const submitHandler = useCallback(
     async (data: FormData) => {
@@ -58,6 +64,8 @@ function ShoppingCartForm() {
 
       reset();
       setShoppingCart([]);
+      setIsCaptchaSuccess(false);
+      captchaRef.current?.reset();
       toast.success('Your order accepted success.');
     },
     [reset, setShoppingCart, shoppintCart]
@@ -70,6 +78,12 @@ function ShoppingCartForm() {
           {fields.map((f) => (
             <FormInput key={f.name} {...f} register={register} error={errors[f.name]?.message} />
           ))}
+          <ReCAPTCHA
+            size='normal'
+            ref={captchaRef}
+            sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_PUBLIC_KEY as string}
+            onChange={changeCaptchaHandler}
+          />
         </div>
 
         <div className='w-full p-4 bg-blue-100 rounded-lg overflow-y-auto'>
