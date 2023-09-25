@@ -1,36 +1,32 @@
 'use client';
 import { Dispatch, ReactNode, SetStateAction, createContext, useContext, useState } from 'react';
-import type { CoordinateType, ShopType } from '@/types';
+import type { ClientAddressType, ShopType } from '@/types';
 
 type Props = {
   children?: ReactNode;
 };
 
 type ShoppingCartContextType = {
-  clientCoordinate: CoordinateType | null;
-  shopCoordinates: ShopType | null;
-  setClientCoordinate: Dispatch<SetStateAction<CoordinateType | null>>;
-  setShopCoordinates: Dispatch<SetStateAction<ShopType | null>>;
+  client: ClientAddressType | null;
+  shop: ShopType | null;
+  setClient: Dispatch<SetStateAction<ClientAddressType | null>>;
+  setShop: Dispatch<SetStateAction<ShopType | null>>;
 };
 
 const initialValues: ShoppingCartContextType = {
-  clientCoordinate: null,
-  shopCoordinates: null,
-  setClientCoordinate: () => {},
-  setShopCoordinates: () => {},
+  client: null,
+  shop: null,
+  setClient: () => {},
+  setShop: () => {},
 };
 const ShoppingCartContext = createContext<ShoppingCartContextType>(initialValues);
 
 function ShoppingCartProvider({ children }: Props) {
-  const [clientCoordinate, setClientCoordinate] = useState<ShoppingCartContextType['clientCoordinate']>(null);
-  const [shopCoordinates, setShopCoordinates] = useState<ShoppingCartContextType['shopCoordinates']>(null);
+  const [client, setClient] = useState<ShoppingCartContextType['client']>(null);
+  const [shop, setShop] = useState<ShoppingCartContextType['shop']>(null);
 
   return (
-    <ShoppingCartContext.Provider
-      value={{ clientCoordinate, shopCoordinates, setClientCoordinate, setShopCoordinates }}
-    >
-      {children}
-    </ShoppingCartContext.Provider>
+    <ShoppingCartContext.Provider value={{ client, shop, setClient, setShop }}>{children}</ShoppingCartContext.Provider>
   );
 }
 

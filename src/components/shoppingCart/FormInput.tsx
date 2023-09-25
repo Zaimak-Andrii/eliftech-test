@@ -1,14 +1,14 @@
 import React, { InputHTMLAttributes } from 'react';
 import { FieldValues, Path, UseFormRegister } from 'react-hook-form';
 
-type Props<T extends FieldValues> = InputHTMLAttributes<HTMLInputElement> & {
+export type FormInputProps<T extends FieldValues> = InputHTMLAttributes<HTMLInputElement> & {
   label?: string;
   name: Path<T>;
   error?: string;
   register: UseFormRegister<T>;
 };
 
-function FormInput<T extends FieldValues>({ label, name, error, register, ...props }: Props<T>) {
+function FormInput<T extends FieldValues>({ label, name, error, register, ...props }: FormInputProps<T>) {
   return (
     <label className='flex flex-col gap-2'>
       {label && <span>{label}</span>}

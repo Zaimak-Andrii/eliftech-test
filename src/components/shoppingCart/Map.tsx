@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { GoogleMap, Libraries, MarkerF, useLoadScript } from '@react-google-maps/api';
+import { useCallback, useEffect, useState } from 'react';
+import { GoogleMap, Libraries, MarkerF, useLoadScript, DirectionsRenderer } from '@react-google-maps/api';
 import type { CoordinateType } from '@/types';
 import { getShopInfoByIdService } from '@/services/api';
 import { useShoppingCartContext } from '.';
@@ -14,7 +14,7 @@ type Props = {
 };
 
 function Map({ className }: Props) {
-  const { clientCoordinate, shopCoordinates, setShopCoordinates } = useShoppingCartContext();
+  const { client, shop, setShop } = useShoppingCartContext();
   const { value } = useShoppingCart();
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_KEY as string,
@@ -23,21 +23,21 @@ function Map({ className }: Props) {
   const [centerCoordinate, setCenterCoordinate] = useState<CoordinateType>(() => ({ lat: 50.45466, lng: 30.5238 }));
 
   useEffect(() => {
-    if (value.length > 0 && shopCoordinates?.name !== value.at(0)?.shop.name) {
+    if (value.length > 0 && shop?.name !== value.at(0)?.shop.name) {
       const fetch = async () => {
         const data = await getShopInfoByIdService(value.at(0)?.shop._id as string);
 
         if (data.status === 'failed') return;
 
-        setShopCoordinates(data.data.shop);
+        setShop(data.data.shop);
       };
 
       fetch();
     }
     if (value.length === 0) {
-      setShopCoordinates(null);
+      setShop(null);
     }
-  }, [setShopCoordinates, shopCoordinates?.name, value]);
+  }, [setShop, shop?.name, value]);
 
   const handleMapClick = async (event: google.maps.MapMouseEvent) => {
     if (!event.latLng) return;
@@ -54,6 +54,51 @@ function Map({ className }: Props) {
     });
   };
 
+  const [response, setResponse] = useState<google.maps.DirectionsResult | null>(null);
+
+  const directionsCallback = useCallback((result: any) => {
+    if (result !== null) {
+      if (result.status === 'OK') {
+        setResponse(result);
+        // Extract and set the travel time from the Directions API response
+        const duration = result.routes[0].legs[0].duration;
+        console.log(duration.text);
+      } else {
+        console.error('Directions request failed: ', result);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const f = async () => {
+      if (!window.google || !client?.coordinate || !shop?.addresses) return;
+
+      const directionsService = new window.google.maps.DirectionsService();
+
+      setResponse(null);
+
+      await directionsService.route(
+        {
+          destination: client?.coordinate!,
+          origin: shop?.addresses.at(0)?.coordinate!,
+          travelMode: google.maps.TravelMode.DRIVING,
+        },
+        (result, status) => {
+          if (status === 'OK' && result) {
+            setResponse(result);
+
+            const duration = result.routes[0].legs[0].duration;
+            console.log(duration?.text);
+          } else {
+            console.error('Запрос маршрута завершился неудачей: ', status);
+          }
+        }
+      );
+    };
+
+    f();
+  }, [client?.coordinate, shop?.addresses]);
+
   return (
     <>
       {isLoaded && (
@@ -63,41 +108,28 @@ function Map({ className }: Props) {
           center={centerCoordinate}
           onClick={handleMapClick}
         >
-          {shopCoordinates &&
-            shopCoordinates.addresses.map((a) => (
+          {shop &&
+            shop.addresses.map((a) => (
               <MarkerF
                 key={a._id}
                 position={a.coordinate}
                 title={a.name}
-                icon={{ url: shopCoordinates.logoUrl, scaledSize: new google.maps.Size(30, 30) }}
+                icon={{ url: shop.logoUrl, scaledSize: new google.maps.Size(30, 30) }}
                 onClick={() => setCenterCoordinate(a.coordinate)}
               />
             ))}
-          {clientCoordinate && (
+          {client && (
             <MarkerF
-              position={clientCoordinate}
+              position={client.coordinate}
               title='Client coordinate'
               icon={{ url: '/images/pin-home.svg', scaledSize: new google.maps.Size(30, 30) }}
-              onClick={() => setCenterCoordinate(clientCoordinate)}
+              onClick={() => setCenterCoordinate(client.coordinate)}
             ></MarkerF>
           )}
 
-          {/* {shopCoordinates && clientCoordinate && (
-            <PolylineF
-              path={[clientCoordinate, centerCoordinate]}
-              options={{
-                strokeColor: '#ff2527',
-                strokeOpacity: 0.75,
-                strokeWeight: 2,
-                icons: [
-                  {
-                    offset: '0',
-                    repeat: '20px',
-                  },
-                ],
-              }}
-            />
-          )} */}
+          {shop && client?.coordinate && (
+            <>{response && <DirectionsRenderer directions={response} options={{ markerOptions: { opacity: 0 } }} />}</>
+          )}
         </GoogleMap>
       )}
     </>

@@ -3,18 +3,16 @@
 import { useCallback, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import ReCAPTCHA from 'react-google-recaptcha';
 import * as yup from 'yup';
+import ReCAPTCHA from 'react-google-recaptcha';
+import { toast } from 'react-toastify';
 import { useShoppingCart } from '@/hooks';
-import FormInput from './FormInput';
+import { addOrderService } from '@/services/api';
 import { convertNumberToMoney } from '@/helpers';
 import ProductsList from './ProductsList';
-import { toast } from 'react-toastify';
-import { addOrderService } from '@/services/api';
-import ReactGoogleAutocomplete from 'react-google-autocomplete';
-import Map from './Map';
-import { CoordinateType } from '@/types';
 import { useShoppingCartContext } from '.';
+import FormInput from './FormInput';
+import FormAddressInput from './FormAddressInput';
 
 const schema = yup
   .object({
@@ -31,7 +29,6 @@ const fields: { name: keyof FormData; label: string; placeholder: string; type: 
   { name: 'name', label: 'Name:', placeholder: 'Enter name', type: 'text' },
   { name: 'email', label: 'Email:', placeholder: 'Enter email', type: 'email' },
   { name: 'phone', label: 'Phone:', placeholder: 'Enter phone', type: 'tel' },
-  // { name: 'address', label: 'Address:', placeholder: 'Enter address', type: 'text' },
 ];
 
 function ShoppingCartForm() {
@@ -43,7 +40,6 @@ function ShoppingCartForm() {
     formState: { errors, isSubmitting, isValid },
     reset,
     setValue,
-    getValues,
   } = useForm<FormData>({
     resolver: yupResolver(schema),
     mode: 'onTouched',
@@ -52,11 +48,27 @@ function ShoppingCartForm() {
   const [isCaptchaSuccess, setIsCaptchaSuccess] = useState(false);
   const totalPrice = shoppintCart.reduce((acc, p) => acc + p.count * p.price, 0);
   const isCanSubmit = isValid && isCaptchaSuccess && shoppintCart.length > 0;
-  const { setClientCoordinate } = useShoppingCartContext();
+  const { setClient } = useShoppingCartContext();
 
   const changeCaptchaHandler = useCallback(() => {
     setIsCaptchaSuccess(true);
   }, []);
+
+  const resetForm = useCallback(() => {
+    reset();
+    setShoppingCart([]);
+    setIsCaptchaSuccess(false);
+    setClient(null);
+    captchaRef.current?.reset();
+  }, [reset, setClient, setShoppingCart]);
+
+  const setAddressValue = useCallback(
+    (address: any) => {
+      setClient(address);
+      setValue('address', address?.name ?? '', { shouldValidate: true, shouldTouch: true });
+    },
+    [setClient, setValue]
+  );
 
   const submitHandler = useCallback(
     async (data: FormData) => {
@@ -70,56 +82,33 @@ function ShoppingCartForm() {
         return toast.error(result.message);
       }
 
-      reset();
-      setShoppingCart([]);
-      setIsCaptchaSuccess(false);
-      setClientCoordinate(null);
-      captchaRef.current?.reset();
+      resetForm();
       toast.success('Your order accepted success.');
     },
-    [reset, setShoppingCart, shoppintCart]
+    [resetForm, shoppintCart]
   );
 
   return (
     <form className='flex gap-4 flex-col w-full overflow-y-auto' onSubmit={handleSubmit(submitHandler)}>
       <div className='flex flex-grow gap-4'>
         <div className='flex flex-col gap-4 w-[40%] flex-shrink-0 p-2 bg-blue-100 rounded-lg'>
-          {fields.map((f) => (
-            <FormInput key={f.name} {...f} register={register} error={errors[f.name]?.message} />
-          ))}
-
           <Controller
             name='address'
             control={control}
-            render={({ field: { onChange, value, ...field } }) => (
-              <label className='flex flex-col gap-2'>
-                <span>Address:</span>
-                <ReactGoogleAutocomplete
-                  className='p-1 text-sm'
-                  apiKey={process.env.NEXT_PUBLIC_GOOGLE_KEY}
-                  onPlaceSelected={(place) => {
-                    if (place.geometry?.location)
-                      setClientCoordinate({
-                        lat: place.geometry?.location?.lat(),
-                        lng: place.geometry?.location?.lng(),
-                      });
-                    else {
-                      setClientCoordinate(null);
-                    }
-
-                    setValue('address', place.formatted_address as string, { shouldValidate: true });
-                  }}
-                  options={{
-                    componentRestrictions: { country: 'ua' },
-                    fields: ['address_components', 'geometry', 'icon', 'name', 'formatted_address'],
-                    types: ['address'],
-                  }}
-                  placeholder='Enter Your address'
-                  {...field}
-                />
-              </label>
+            render={({ field }) => (
+              <FormAddressInput
+                label='Address:'
+                field={field}
+                name='address'
+                placeholder='Enter Your address'
+                setValue={setAddressValue}
+              />
             )}
           />
+
+          {fields.map((f) => (
+            <FormInput key={f.name} {...f} register={register} error={errors[f.name]?.message} />
+          ))}
 
           <ReCAPTCHA
             size='normal'
