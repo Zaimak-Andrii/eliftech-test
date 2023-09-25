@@ -4,3 +4,4 @@ export * from './Menu';
 export * from './CartProduct';
 export * from './FetchResponse';
 export * from './Order';
+export * from './map';

@@ -26,8 +26,6 @@ export default function useLocalStorage<T>(key: string, defaultValue: T): [T, (v
   }, []);
 
   const setValueWrap = (value: T) => {
-    console.log(value);
-
     try {
       setValue(value);
 

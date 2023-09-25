@@ -12,6 +12,9 @@ import ProductsList from './ProductsList';
 import { toast } from 'react-toastify';
 import { addOrderService } from '@/services/api';
 import ReactGoogleAutocomplete from 'react-google-autocomplete';
+import Map from './Map';
+import { CoordinateType } from '@/types';
+import { useShoppingCartContext } from '.';
 
 const schema = yup
   .object({
@@ -40,6 +43,7 @@ function ShoppingCartForm() {
     formState: { errors, isSubmitting, isValid },
     reset,
     setValue,
+    getValues,
   } = useForm<FormData>({
     resolver: yupResolver(schema),
     mode: 'onTouched',
@@ -48,6 +52,7 @@ function ShoppingCartForm() {
   const [isCaptchaSuccess, setIsCaptchaSuccess] = useState(false);
   const totalPrice = shoppintCart.reduce((acc, p) => acc + p.count * p.price, 0);
   const isCanSubmit = isValid && isCaptchaSuccess && shoppintCart.length > 0;
+  const { setClientCoordinate } = useShoppingCartContext();
 
   const changeCaptchaHandler = useCallback(() => {
     setIsCaptchaSuccess(true);
@@ -68,6 +73,7 @@ function ShoppingCartForm() {
       reset();
       setShoppingCart([]);
       setIsCaptchaSuccess(false);
+      setClientCoordinate(null);
       captchaRef.current?.reset();
       toast.success('Your order accepted success.');
     },
@@ -92,7 +98,16 @@ function ShoppingCartForm() {
                   className='p-1 text-sm'
                   apiKey={process.env.NEXT_PUBLIC_GOOGLE_KEY}
                   onPlaceSelected={(place) => {
-                    setValue('address', place.formatted_address);
+                    if (place.geometry?.location)
+                      setClientCoordinate({
+                        lat: place.geometry?.location?.lat(),
+                        lng: place.geometry?.location?.lng(),
+                      });
+                    else {
+                      setClientCoordinate(null);
+                    }
+
+                    setValue('address', place.formatted_address as string, { shouldValidate: true });
                   }}
                   options={{
                     componentRestrictions: { country: 'ua' },
