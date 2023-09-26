@@ -1,4 +1,4 @@
-import { InputHTMLAttributes, useCallback, useRef } from 'react';
+import { InputHTMLAttributes, useCallback, useEffect, useRef } from 'react';
 import { FieldValues, Path } from 'react-hook-form';
 import ReactGoogleAutocomplete from 'react-google-autocomplete';
 import { ClientAddressType } from '@/types';
@@ -59,6 +59,11 @@ export default function FormAddressInput<T extends FieldValues>({
 
     onBlur();
   };
+
+  useEffect(() => {
+    if (ref.current) ref.current.value = value;
+  }, [value]);
+
   return (
     <label className='flex flex-col gap-2'>
       {label && <span>{label}</span>}
@@ -73,6 +78,7 @@ export default function FormAddressInput<T extends FieldValues>({
         {...field}
         ref={ref}
       />
+      {error && <p className='text-[10px]/[1] text-red-600'>{error}</p>}
     </label>
   );
 }

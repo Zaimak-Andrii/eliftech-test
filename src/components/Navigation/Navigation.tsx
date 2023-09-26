@@ -2,10 +2,7 @@ import { Route } from '@/constants';
 import NavigationLink from './NavigationLink';
 import NavigationCartLink from './NavigationCartLink';
 
-const links = [
-  { label: 'Shop', href: Route.SHOP },
-  // { label: 'Shopping cart', href: Route.SHOPPING_CART },
-];
+const links = [{ label: 'Shop', href: Route.SHOP }];
 
 function Navigation() {
   return (
@@ -17,7 +14,9 @@ function Navigation() {
           </li>
         ))}
         <li>
-          <NavigationCartLink href={Route.SHOPPING_CART}>Shopping cart</NavigationCartLink>
+          <NavigationCartLink key='Shopping cart' href={Route.SHOPPING_CART}>
+            Shopping cart
+          </NavigationCartLink>
         </li>
       </ul>
     </nav>

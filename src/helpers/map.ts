@@ -4,11 +4,17 @@ export const getAddressByLocation = async (location: CoordinateType) => {
   const geocoder = new window.google.maps.Geocoder();
   let address = null;
 
-  await geocoder.geocode({ location }, (results, status) => {
-    console.log('Converted coordinate', results, status);
-  });
+  try {
+    await geocoder.geocode({ location }, (results, status) => {
+      if (status === 'OK' && results && results?.length > 0) {
+        address = results.at(0)?.formatted_address;
+      } else throw new Error('Address not found');
+    });
 
-  return address;
+    return address;
+  } catch (error) {}
+
+  return `${location.lat}, ${location.lng}`;
 };
 
 export const getLocationByAddress = async (address: string) => {

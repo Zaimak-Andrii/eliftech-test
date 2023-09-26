@@ -1,12 +1,14 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { GoogleMap, Libraries, MarkerF, useLoadScript, DirectionsRenderer } from '@react-google-maps/api';
+import { GoogleMap, Libraries, MarkerF, useLoadScript } from '@react-google-maps/api';
+import { twMerge } from 'tailwind-merge';
 import type { CoordinateType } from '@/types';
 import { getShopInfoByIdService } from '@/services/api';
 import { useShoppingCartContext } from '.';
 import { useShoppingCart } from '@/hooks';
-import { twMerge } from 'tailwind-merge';
+import { getAddressByLocation } from '@/helpers';
+import MapDirectionRenderer from './MapDirectionRenderer';
 
 const libraries: Libraries = ['places'];
 type Props = {
@@ -14,7 +16,7 @@ type Props = {
 };
 
 function Map({ className }: Props) {
-  const { client, shop, setShop } = useShoppingCartContext();
+  const { client, shop, setShop, setClient } = useShoppingCartContext();
   const { value } = useShoppingCart();
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_KEY as string,
@@ -39,65 +41,24 @@ function Map({ className }: Props) {
     }
   }, [setShop, shop?.name, value]);
 
-  const handleMapClick = async (event: google.maps.MapMouseEvent) => {
-    if (!event.latLng) return;
+  const handleMapClick = useCallback(
+    async (event: google.maps.MapMouseEvent) => {
+      if (!event.latLng) return;
 
-    const newMarker = {
-      lat: event.latLng.lat(),
-      lng: event.latLng.lng(),
-    };
+      const newMarker = {
+        lat: event.latLng.lat(),
+        lng: event.latLng.lng(),
+      };
 
-    const geocoder = new window.google.maps.Geocoder();
+      const address = await getAddressByLocation(newMarker);
 
-    await geocoder.geocode({ location: newMarker }, (results, status) => {
-      console.log('Converted coordinate', results, status);
-    });
-  };
-
-  const [response, setResponse] = useState<google.maps.DirectionsResult | null>(null);
-
-  const directionsCallback = useCallback((result: any) => {
-    if (result !== null) {
-      if (result.status === 'OK') {
-        setResponse(result);
-        // Extract and set the travel time from the Directions API response
-        const duration = result.routes[0].legs[0].duration;
-        console.log(duration.text);
-      } else {
-        console.error('Directions request failed: ', result);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    const f = async () => {
-      if (!window.google || !client?.coordinate || !shop?.addresses) return;
-
-      const directionsService = new window.google.maps.DirectionsService();
-
-      setResponse(null);
-
-      await directionsService.route(
-        {
-          destination: client?.coordinate!,
-          origin: shop?.addresses.at(0)?.coordinate!,
-          travelMode: google.maps.TravelMode.DRIVING,
-        },
-        (result, status) => {
-          if (status === 'OK' && result) {
-            setResponse(result);
-
-            const duration = result.routes[0].legs[0].duration;
-            console.log(duration?.text);
-          } else {
-            console.error('Запрос маршрута завершился неудачей: ', status);
-          }
-        }
-      );
-    };
-
-    f();
-  }, [client?.coordinate, shop?.addresses]);
+      setClient({
+        name: address as string,
+        coordinate: newMarker,
+      });
+    },
+    [setClient]
+  );
 
   return (
     <>
@@ -127,8 +88,8 @@ function Map({ className }: Props) {
             ></MarkerF>
           )}
 
-          {shop && client?.coordinate && (
-            <>{response && <DirectionsRenderer directions={response} options={{ markerOptions: { opacity: 0 } }} />}</>
+          {shop && client?.coordinate && shop?.addresses.length > 0 && (
+            <MapDirectionRenderer destination={client.coordinate} origin={shop.addresses.at(0)!.coordinate} />
           )}
         </GoogleMap>
       )}

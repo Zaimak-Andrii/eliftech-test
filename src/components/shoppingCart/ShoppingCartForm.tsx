@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -48,7 +48,7 @@ function ShoppingCartForm() {
   const [isCaptchaSuccess, setIsCaptchaSuccess] = useState(false);
   const totalPrice = shoppintCart.reduce((acc, p) => acc + p.count * p.price, 0);
   const isCanSubmit = isValid && isCaptchaSuccess && shoppintCart.length > 0;
-  const { setClient } = useShoppingCartContext();
+  const { client, setClient } = useShoppingCartContext();
 
   const changeCaptchaHandler = useCallback(() => {
     setIsCaptchaSuccess(true);
@@ -65,9 +65,8 @@ function ShoppingCartForm() {
   const setAddressValue = useCallback(
     (address: any) => {
       setClient(address);
-      setValue('address', address?.name ?? '', { shouldValidate: true, shouldTouch: true });
     },
-    [setClient, setValue]
+    [setClient]
   );
 
   const submitHandler = useCallback(
@@ -87,6 +86,10 @@ function ShoppingCartForm() {
     },
     [resetForm, shoppintCart]
   );
+
+  useEffect(() => {
+    setValue('address', client?.name ?? '', { shouldValidate: true, shouldTouch: true });
+  }, [client, setValue]);
 
   return (
     <form className='flex gap-4 flex-col flex-grow w-full ' onSubmit={handleSubmit(submitHandler)}>
