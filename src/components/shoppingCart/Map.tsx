@@ -35,6 +35,7 @@ function Map({ className }: Props) {
         const shop = data.data.shop;
 
         setShop(shop);
+        if (shop.addresses.length > 0) setSelectedShopCoordinate(shop.addresses.at(0)!.coordinate);
       };
 
       fetch();
