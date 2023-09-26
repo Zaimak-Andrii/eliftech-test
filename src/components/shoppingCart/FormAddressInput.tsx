@@ -63,7 +63,7 @@ export default function FormAddressInput<T extends FieldValues>({
     <label className='flex flex-col gap-2'>
       {label && <span>{label}</span>}
       <ReactGoogleAutocomplete
-        className='p-1 text-sm'
+        className='p-1'
         apiKey={process.env.NEXT_PUBLIC_GOOGLE_KEY}
         onPlaceSelected={placeSelectedHandler}
         options={options}

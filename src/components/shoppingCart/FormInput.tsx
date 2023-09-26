@@ -12,7 +12,7 @@ function FormInput<T extends FieldValues>({ label, name, error, register, ...pro
   return (
     <label className='flex flex-col gap-2'>
       {label && <span>{label}</span>}
-      <input className='p-1 text-sm' type='text' {...props} {...register(name)} />
+      <input className='p-1' type='text' {...props} {...register(name)} />
       {error && <p className='text-[10px]/[1] text-red-600'>{error}</p>}
     </label>
   );
