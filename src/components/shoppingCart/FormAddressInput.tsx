@@ -27,23 +27,7 @@ export default function FormAddressInput<T extends FieldValues>({
   ...props
 }: Props<T>) {
   const ref = useRef<HTMLInputElement | null>(null);
-  const placeSelectedHandler = useCallback(
-    (place: any) => {
-      if (place.geometry?.location) {
-        setValue({
-          name: place.formatted_address as string,
-          coordinate: {
-            lat: place.geometry?.location?.lat(),
-            lng: place.geometry?.location?.lng(),
-          },
-        });
-      } else {
-        setValue(null);
-      }
-    },
-    [setValue]
-  );
-  const blurHandler = async () => {
+  const blurHandler = useCallback(async () => {
     if (!ref.current) return;
     const value = ref.current.value.trim();
     const location = await getLocationByAddress(value);
@@ -58,7 +42,7 @@ export default function FormAddressInput<T extends FieldValues>({
     );
 
     onBlur();
-  };
+  }, [onBlur, setValue]);
 
   useEffect(() => {
     if (ref.current) ref.current.value = value;
@@ -70,7 +54,6 @@ export default function FormAddressInput<T extends FieldValues>({
       <ReactGoogleAutocomplete
         className='p-1'
         apiKey={process.env.NEXT_PUBLIC_GOOGLE_KEY}
-        onPlaceSelected={placeSelectedHandler}
         options={options}
         inputAutocompleteValue={value}
         onBlur={blurHandler}

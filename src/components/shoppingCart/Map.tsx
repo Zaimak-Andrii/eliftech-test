@@ -16,7 +16,8 @@ type Props = {
 };
 
 function Map({ className }: Props) {
-  const { client, shop, setShop, setClient } = useShoppingCartContext();
+  const { client, shop, selectedShopCoordinate, setShop, setClient, setSelectedShopCoordinate } =
+    useShoppingCartContext();
   const { value } = useShoppingCart();
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_KEY as string,
@@ -31,15 +32,18 @@ function Map({ className }: Props) {
 
         if (data.status === 'failed') return;
 
-        setShop(data.data.shop);
+        const shop = data.data.shop;
+
+        setShop(shop);
       };
 
       fetch();
     }
     if (value.length === 0) {
       setShop(null);
+      setSelectedShopCoordinate(null);
     }
-  }, [setShop, shop?.name, value]);
+  }, [setSelectedShopCoordinate, setShop, shop?.name, value]);
 
   const handleMapClick = useCallback(
     async (event: google.maps.MapMouseEvent) => {
@@ -76,7 +80,10 @@ function Map({ className }: Props) {
                 position={a.coordinate}
                 title={a.name}
                 icon={{ url: shop.logoUrl, scaledSize: new google.maps.Size(30, 30) }}
-                onClick={() => setCenterCoordinate(a.coordinate)}
+                onClick={() => {
+                  setCenterCoordinate(a.coordinate);
+                  setSelectedShopCoordinate(a.coordinate);
+                }}
               />
             ))}
           {client && (
@@ -88,8 +95,8 @@ function Map({ className }: Props) {
             ></MarkerF>
           )}
 
-          {shop && client?.coordinate && shop?.addresses.length > 0 && (
-            <MapDirectionRenderer destination={client.coordinate} origin={shop.addresses.at(0)!.coordinate} />
+          {shop && client?.coordinate && selectedShopCoordinate && (
+            <MapDirectionRenderer destination={client.coordinate} origin={selectedShopCoordinate} />
           )}
         </GoogleMap>
       )}
