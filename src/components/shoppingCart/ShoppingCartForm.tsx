@@ -89,9 +89,9 @@ function ShoppingCartForm() {
   );
 
   return (
-    <form className='flex gap-4 flex-col w-full overflow-y-auto' onSubmit={handleSubmit(submitHandler)}>
-      <div className='flex flex-grow gap-4'>
-        <div className='flex flex-col gap-4 w-[40%] flex-shrink-0 p-2 bg-blue-100 rounded-lg'>
+    <form className='flex gap-4 flex-col flex-grow w-full ' onSubmit={handleSubmit(submitHandler)}>
+      <div className='flex flex-col md:flex-row flex-grow gap-4'>
+        <div className='flex-shrink-0 flex flex-col gap-4 flex-grow  p-2 bg-blue-100 rounded-lg overflow-y-auto'>
           <Controller
             name='address'
             control={control}
@@ -118,7 +118,7 @@ function ShoppingCartForm() {
           />
         </div>
 
-        <div className='w-full p-4 bg-blue-100 rounded-lg overflow-y-auto'>
+        <div className='flex-grow lg:flex-grow-[2] flex-shrink-0 p-4 bg-blue-100 rounded-lg'>
           <ProductsList list={shoppintCart} />
         </div>
       </div>

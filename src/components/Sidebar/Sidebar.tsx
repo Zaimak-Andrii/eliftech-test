@@ -25,7 +25,7 @@ function Sidebar({ shops }: Props) {
   }, [cartShopId, router, shoppingCart, shopId]);
 
   return (
-    <aside className='min-w-[300px] h-full p-4 bg-blue-50 rounded-lg'>
+    <aside className='w-full md:w-[35%] xl:w-[25%] flex-shrink-0 h-fit md:h-full p-4 bg-blue-50 rounded-lg'>
       <h2 className='mb-4 text-center text-lg font-bold'>Shops:</h2>
       <ul className='flex flex-col gap-3'>
         {shops.map(({ _id, name }) => (

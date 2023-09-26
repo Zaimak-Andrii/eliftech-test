@@ -11,7 +11,7 @@ async function ShopLayout({ children }: Props) {
   const result = await getShopsService();
 
   return (
-    <div className='flex gap-4 w-full h-full'>
+    <div className='flex flex-col md:flex-row gap-4 w-full h-full'>
       {result.status === 'success' && <Sidebar shops={result.data.shops} />}
 
       {children}
